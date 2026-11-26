@@ -12,6 +12,7 @@ All deterministic procedural generation uses `mulberry32(seed)`:
 | --- | --- | --- | --- |
 | `SEEDS.ENV_TEXTURES` | `4219` | `src/assets/environmentTextures.ts` | Grass blades/flowers, cobblestone variation, masonry, wood grain, tree/bush foliage noise |
 | `SEEDS.WORLD_VALE` | `9001` | `src/world/valeBuilder.ts` | Brazier flame phase offsets, crate rotation jitter, bush scale variation |
+| `SEEDS.MUSIC_REVERB` | `1337` | `src/audio/instruments.ts` | Seeded stereo hall impulse for the background-music reverb bus |
 
 When adding new procedural zones or texture sets, register a new constant under `SEEDS` in `src/config/constants.ts` rather than calling `Math.random()`.
 
@@ -56,7 +57,7 @@ When adding new procedural zones or texture sets, register a new constant under 
 
 ---
 
-## 4. Web Audio Synthesis (`src/audio/soundEngine.ts`)
+## 4. Web Audio Synthesis (`src/audio/soundEngine.ts`, `src/audio/musicSequencer.ts`, `src/audio/instruments.ts`)
 
 `SoundEngine` initializes lazily on the first user gesture (`Start` button or canvas click) to comply with browser autoplay policies:
 
@@ -67,4 +68,21 @@ When adding new procedural zones or texture sets, register a new constant under 
 - **`playDash()`**: Triangle upward whoosh (`310 -> 590 Hz`).
 - **`playPickup()` & `playFanfare()`**: Stepped triangle arpeggio chimes.
 - **`playStep(onStone)`**: Short sine thump tuned higher (`165 Hz`) on cobblestone/bridge vs. grass (`105 Hz`).
-- **`startAmbience()`**: 24-step D-major/B-minor 16-bit harp arpeggio (`360ms` interval) through a `1100 Hz` low-pass filter.
+
+### 4a. Lookahead music sequencer (`src/audio/musicSequencer.ts`)
+
+The background loop is scheduled by `LookaheadScheduler` instead of a `setInterval` that plays a note per tick:
+
+1. **Timing**: `secondsPerStep()` derives the grid from `MUSIC_CONFIG.bpm` (`84`) and `MUSIC_CONFIG.stepsPerBeat` (`4`), i.e. `60 / 84 / 4 ≈ 0.1786s` per 16th note.
+2. **Scheduling**: every `MUSIC_CONFIG.tickMs` (`25ms`) `SoundEngine.pumpMusic()` collects the steps due within `MUSIC_CONFIG.lookaheadSeconds` (`0.1s`). Step times advance from a fixed origin by whole step durations, so timer jitter never accumulates into audible drift.
+3. **Catch-up guard**: `MUSIC_CONFIG.maxCatchUpSteps` (`8`) bounds how many steps one tick may emit, and a scheduler that wakes far behind `AudioContext.currentTime` (throttled background tab, suspended context) is re-anchored instead of dumping stale notes.
+4. **Pattern**: `VALE_LOOP` is a two-bar `32`-step loop in D major / B minor reusing the original harp arpeggio as a MIDI lead line, with pad chords, bass roots and soft percussion as parallel channels; `channelAt()` wraps loop indices in both directions.
+5. **Pitch helpers**: `midiToHz()` / `transposeMidi()` are pure equal-temperament converters covered by `tests/musicSequencer.test.ts` alongside the timing, wrapping and pattern-validation helpers.
+
+### 4b. Instruments and shared bus (`src/audio/instruments.ts`)
+
+- **`playHarpPluck()`**: Triangle body plus sine octave shimmer through a decaying low-pass — the plucked lead.
+- **`playStringPad()`**: Detuned triangle pairs with a `0.26s` swell and long release for the warm string pad.
+- **`playBass()`**: Rounded triangle fundamental with a sine sub through a `620 Hz` low-pass.
+- **`playPerc()`**: Felt sine kick ("low") and a band-passed noise "tick".
+- **`createMusicBus()`**: One shared stereo bus per `startMusic()` — dry path plus a damped feedback delay (`MUSIC_CONFIG.delaySeconds`, `delayFeedback`, `delayLowpassHz`) and a convolver hall fed by `createHallImpulse()`, which fills its stereo impulse with `mulberry32(SEEDS.MUSIC_REVERB)` noise under an exponential tail. Every channel mixes into this bus, so the loop sits in one coherent space without per-note reverb cost.
