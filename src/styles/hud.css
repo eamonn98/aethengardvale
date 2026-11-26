@@ -174,6 +174,74 @@ canvas {
     border-color: #554a3b;
 }
 
+/* Boss health bar (top-center, only mounted while a boss is alive) */
+#boss-hud {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    width: clamp(300px, 30vw, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 10px 5px;
+    background: var(--panel);
+    border: 2px solid var(--gold-dim);
+    box-shadow:
+        0 0 0 1px #090706,
+        inset 0 0 0 1px rgba(230, 198, 120, 0.22),
+        0 8px 24px rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -8px);
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease,
+        visibility 0.28s;
+    z-index: 6;
+}
+#boss-hud.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+#boss-name {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+#boss-bar-track {
+    height: 14px;
+    padding: 2px;
+    background: #1a0f10;
+    border: 2px solid var(--gold-dim);
+    border-radius: 2px;
+    box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.9),
+        0 0 0 1px #090706;
+}
+#boss-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(180deg, #ff8b6a, #c2201f 65%, #8f1518);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 0 8px rgba(255, 80, 60, 0.45);
+    transition: width 0.18s linear;
+}
+#boss-hp-text {
+    text-align: right;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--gold-dim);
+}
+
 /* Banner notification */
 #banner-toast {
     position: fixed;
@@ -738,6 +806,18 @@ canvas {
     }
 }
 
+@media (max-width: 1200px) {
+    /* Drop the boss bar under the top band so it cannot collide with the
+       status panel or the toggle column on narrower laptops. */
+    #boss-hud {
+        top: 86px;
+        width: min(420px, 70vw);
+    }
+    #banner-toast {
+        top: 146px;
+    }
+}
+
 @media (max-width: 560px) {
     #status-hud {
         top: 8px;
@@ -746,6 +826,10 @@ canvas {
         min-width: 0;
         padding: 7px 10px;
         gap: 9px;
+    }
+    #boss-hud {
+        top: 72px;
+        width: calc(100vw - 16px);
     }
     #portrait-box {
         width: 40px;
@@ -768,7 +852,7 @@ canvas {
         font-size: 10px;
     }
     #top-controls {
-        top: 90px;
+        top: 130px;
         right: 8px;
         padding: 5px 7px;
     }
@@ -777,7 +861,7 @@ canvas {
         font-size: 10px;
     }
     #banner-toast {
-        top: 128px;
+        top: 172px;
         font-size: 12px;
         padding: 6px 16px;
         max-width: 92vw;

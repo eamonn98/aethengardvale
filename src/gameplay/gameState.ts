@@ -137,8 +137,10 @@ export class GameApp {
     this.events.on("player:died", ({ slimesDefeated, lvl }) =>
       this.hud.showGameOver(slimesDefeated, lvl),
     );
+    this.events.on("boss:hp", (state) => this.hud.updateBossHp(state));
 
     this.enemies.spawnInitial();
+    this.syncBossHp();
     this.emitStats();
     window.addEventListener("resize", this.handleResize);
   }
