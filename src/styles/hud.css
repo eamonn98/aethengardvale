@@ -360,3 +360,215 @@ canvas {
     transform: translate(-50%, -50%);
     will-change: transform, opacity;
 }
+
+/* Coarse-pointer virtual controls (gamepad-style touch layout) */
+#touch-controls {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 12;
+    pointer-events: none;
+    touch-action: none;
+}
+#overlay-screen:not(.hidden) ~ #touch-controls {
+    display: none;
+}
+.touch-cluster {
+    position: fixed;
+    display: grid;
+    gap: 8px;
+    pointer-events: auto;
+    touch-action: none;
+}
+#touch-dpad {
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    left: calc(18px + env(safe-area-inset-left, 0px));
+    grid-template-columns: repeat(3, 54px);
+    grid-template-rows: repeat(3, 54px);
+    grid-template-areas:
+        ". up ."
+        "left . right"
+        ". down .";
+}
+.dpad-up {
+    grid-area: up;
+}
+.dpad-down {
+    grid-area: down;
+}
+.dpad-left {
+    grid-area: left;
+}
+.dpad-right {
+    grid-area: right;
+}
+#touch-actions {
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    right: calc(18px + env(safe-area-inset-right, 0px));
+    grid-template-columns: repeat(2, 62px);
+    grid-template-rows: repeat(2, 62px);
+}
+.touch-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: rgba(40, 33, 27, 0.62);
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 1px rgba(9, 7, 6, 0.85),
+        inset 0 0 0 1px rgba(230, 198, 120, 0.16),
+        0 4px 14px rgba(0, 0, 0, 0.5);
+    color: var(--gold);
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    backdrop-filter: blur(3px);
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+#touch-actions .touch-btn {
+    font-size: 11px;
+}
+.touch-btn.pressed,
+.touch-btn:active {
+    background: rgba(230, 198, 120, 0.28);
+    border-color: var(--gold);
+    color: #fff6dc;
+}
+.touch-btn.locked {
+    opacity: 0.4;
+    cursor: default;
+}
+
+@media (pointer: coarse), (hover: none) {
+    #touch-controls {
+        display: block;
+    }
+    #controls-hint {
+        display: none;
+    }
+    /* Keep the minimap clear of the virtual action cluster. */
+    #minimap-wrap {
+        bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+        right: calc(12px + env(safe-area-inset-right, 0px));
+        width: 92px;
+        height: 92px;
+    }
+    #minimap-canvas {
+        width: 88px;
+        height: 88px;
+    }
+    .compass-n {
+        bottom: calc(240px + env(safe-area-inset-bottom, 0px));
+        right: calc(54px + env(safe-area-inset-right, 0px));
+    }
+}
+
+@media (max-width: 560px) {
+    #status-hud {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        min-width: 0;
+        padding: 7px 10px;
+        gap: 9px;
+    }
+    #portrait-box {
+        width: 40px;
+        height: 40px;
+    }
+    #portrait-canvas {
+        width: 36px;
+        height: 36px;
+    }
+    .name-row {
+        font-size: 12px;
+    }
+    .bar-wrap {
+        font-size: 10px;
+    }
+    .bar-num {
+        width: 44px;
+    }
+    .meta-row {
+        font-size: 10px;
+    }
+    #top-controls {
+        top: 90px;
+        right: 8px;
+        padding: 5px 7px;
+    }
+    .pill-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+    #banner-toast {
+        top: 128px;
+        font-size: 12px;
+        padding: 6px 16px;
+        max-width: 92vw;
+        white-space: normal;
+        text-align: center;
+    }
+    #controls-hint {
+        display: none;
+    }
+    .title-card {
+        margin: 0 12px;
+        padding: 22px 20px;
+    }
+    .title-main {
+        font-size: 26px;
+    }
+    .title-desc {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    #touch-dpad {
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        left: calc(14px + env(safe-area-inset-left, 0px));
+        gap: 6px;
+        grid-template-columns: repeat(3, 46px);
+        grid-template-rows: repeat(3, 46px);
+    }
+    #touch-actions {
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        right: calc(14px + env(safe-area-inset-right, 0px));
+        gap: 6px;
+        grid-template-columns: repeat(2, 54px);
+        grid-template-rows: repeat(2, 54px);
+    }
+    .touch-btn {
+        font-size: 11px;
+    }
+    #touch-actions .touch-btn {
+        font-size: 10px;
+    }
+}
+
+/* Short landscape phones: park the minimap between the touch clusters. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+    #minimap-wrap {
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: 72px;
+        height: 72px;
+    }
+    #minimap-canvas {
+        width: 68px;
+        height: 68px;
+    }
+    .compass-n {
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+        left: calc(50% - 4px);
+        right: auto;
+    }
+}
