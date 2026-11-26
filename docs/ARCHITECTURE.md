@@ -152,4 +152,5 @@ Key rendering parameters (`src/rendering/renderPipeline.ts` & `src/rendering/hd2
 | `player:died` | `{ slimesDefeated, lvl }` | `HudController.showGameOver` |
 | `boss:spawned` | `{ tier }` | Future audio/UI hooks |
 | `boss:defeated` | `{ tier }` | Future quest/victory hooks |
+| `boss:hp` | `{ active, tier, name, hp, maxHp }` | `HudController.updateBossHp` |
 | `chest:opened` | `{ goldBonus, atkBonus }` | Future inventory/quest hooks |

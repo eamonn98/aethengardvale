@@ -1,12 +1,18 @@
 import * as THREE from "three";
 import type { SoundEngine } from "../audio/soundEngine.ts";
+import type { EnvironmentTextures } from "../assets/environmentTextures.ts";
 import type { PickupType } from "../core/types.ts";
 import type { FloatingTextLayer } from "../ui/floatingText.ts";
 import { getTerrainHeight } from "../world/terrain.ts";
+import {
+  pickupBobY,
+  pickupGlintFrame,
+  pickupTilt,
+} from "./pickupAnimation.ts";
 import type { PlayerController } from "./player.ts";
 
 export interface PickupEntity {
-  mesh: THREE.Mesh<THREE.OctahedronGeometry, THREE.MeshBasicMaterial>;
+  mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
   x: number;
   z: number;
   baseY: number;
@@ -14,25 +20,61 @@ export interface PickupEntity {
   age: number;
 }
 
+interface PickupStyle {
+  geo: THREE.PlaneGeometry;
+  baseMat: THREE.MeshStandardMaterial;
+  glintMat: THREE.MeshStandardMaterial;
+}
+
+function createPickupMaterial(
+  map: THREE.Texture,
+  emissive: string,
+): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({
+    map,
+    alphaTest: 0.5,
+    side: THREE.DoubleSide,
+    roughness: 0.88,
+    metalness: 0.05,
+    emissive,
+    emissiveIntensity: 0.35,
+  });
+}
+
 /**
- * Manages gold and heart drops with shared geometry/materials.
+ * Manages pixel-art gold and heart drops with shared geometry/materials and a two-frame glint.
  */
 export class PickupManager {
   readonly pickups: PickupEntity[] = [];
   private readonly scene: THREE.Scene;
-  private readonly geo = new THREE.OctahedronGeometry(0.24, 0);
-  private readonly goldMat = new THREE.MeshBasicMaterial({ color: "#ffd852" });
-  private readonly heartMat = new THREE.MeshBasicMaterial({ color: "#ff5768" });
+  private readonly styles: Record<PickupType, PickupStyle>;
 
-  constructor(scene: THREE.Scene) {
+  constructor(
+    scene: THREE.Scene,
+    textures: EnvironmentTextures,
+  ) {
     this.scene = scene;
+    this.styles = {
+      gold: {
+        geo: new THREE.PlaneGeometry(0.42, 0.42),
+        baseMat: createPickupMaterial(textures.coinMap, "#4a3208"),
+        glintMat: createPickupMaterial(textures.coinGlintMap, "#4a3208"),
+      },
+      heart: {
+        geo: new THREE.PlaneGeometry(0.46, 0.46),
+        baseMat: createPickupMaterial(textures.heartMap, "#3d0a12"),
+        glintMat: createPickupMaterial(textures.heartGlintMap, "#3d0a12"),
+      },
+    };
   }
 
   spawn(x: number, z: number, type: PickupType = "gold"): void {
-    const mat = type === "heart" ? this.heartMat : this.goldMat;
-    const mesh = new THREE.Mesh(this.geo, mat);
+    const style = this.styles[type];
+    const mesh = new THREE.Mesh(style.geo, style.baseMat);
     const y = getTerrainHeight(x, z) + 0.45;
     mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     this.scene.add(mesh);
     this.pickups.push({ mesh, x, z, baseY: y, type, age: 0 });
   }
@@ -48,8 +90,11 @@ export class PickupManager {
       const p = this.pickups[i];
       if (!p) continue;
       p.age += dt;
-      p.mesh.rotation.y += dt * 3.0;
-      p.mesh.position.y = p.baseY + Math.sin(p.age * 5) * 0.14;
+      const style = this.styles[p.type];
+      const mat = pickupGlintFrame(p.age) ? style.glintMat : style.baseMat;
+      if (p.mesh.material !== mat) p.mesh.material = mat;
+      p.mesh.rotation.z = pickupTilt(p.age);
+      p.mesh.position.y = p.baseY + pickupBobY(p.age);
 
       if (player.alive && Math.hypot(player.x - p.x, player.z - p.z) < 1.05) {
         sfx.playPickup();
@@ -78,8 +123,10 @@ export class PickupManager {
 
   dispose(): void {
     this.clear();
-    this.geo.dispose();
-    this.goldMat.dispose();
-    this.heartMat.dispose();
+    for (const style of Object.values(this.styles)) {
+      style.geo.dispose();
+      style.baseMat.dispose();
+      style.glintMat.dispose();
+    }
   }
 }

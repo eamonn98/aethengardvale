@@ -1,4 +1,4 @@
-import type { PlayerStatsSnapshot } from "../core/types.ts";
+import type { GameEvents, PlayerStatsSnapshot } from "../core/types.ts";
 
 export interface HudActions {
   onToggleDof: () => void;
@@ -30,6 +30,10 @@ export class HudController {
   private readonly slimeCount = requireElement<HTMLElement>("slime-count");
   private readonly goldCount = requireElement<HTMLElement>("gold-count");
   private readonly bannerToast = requireElement<HTMLElement>("banner-toast");
+  private readonly bossHud = requireElement<HTMLElement>("boss-hud");
+  private readonly bossName = requireElement<HTMLElement>("boss-name");
+  private readonly bossBarFill = requireElement<HTMLElement>("boss-bar-fill");
+  private readonly bossHpText = requireElement<HTMLElement>("boss-hp-text");
   private readonly btnCustomize = requireElement<HTMLButtonElement>("btn-customize");
   private readonly btnDof = requireElement<HTMLButtonElement>("btn-dof");
   private readonly btnAudio = requireElement<HTMLButtonElement>("btn-audio");
@@ -96,6 +100,18 @@ export class HudController {
     this.bannerToast.textContent = message;
     this.bannerToast.classList.add("show");
     this.toastTimer = duration;
+  }
+
+  updateBossHp(state: GameEvents["boss:hp"]): void {
+    const active = state.active && state.hp > 0 && state.maxHp > 0;
+    this.bossHud.classList.toggle("active", active);
+    this.bossHud.setAttribute("aria-hidden", active ? "false" : "true");
+    if (!active) return;
+
+    const ratio = Math.min(Math.max(state.hp / state.maxHp, 0), 1);
+    this.bossName.textContent = state.name;
+    this.bossBarFill.style.width = `${ratio * 100}%`;
+    this.bossHpText.textContent = `${Math.ceil(state.hp)}/${state.maxHp}`;
   }
 
   isToastActive(): boolean {

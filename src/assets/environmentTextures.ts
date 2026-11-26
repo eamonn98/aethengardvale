@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { SEEDS } from "../config/constants.ts";
 import { mulberry32 } from "../core/prng.ts";
-import { canvasToPixelTexture, makeCanvas } from "./canvasUtils.ts";
+import { canvasToPixelTexture, drawGridSprite, makeCanvas } from "./canvasUtils.ts";
 import {
   canvasToSurfaceTexture,
   computeSobelNormals,
@@ -37,7 +37,65 @@ export interface EnvironmentTextures {
   bushMap: THREE.CanvasTexture;
   flameTextures: THREE.CanvasTexture[];
   slashMap: THREE.CanvasTexture;
+  coinMap: THREE.CanvasTexture;
+  coinGlintMap: THREE.CanvasTexture;
+  heartMap: THREE.CanvasTexture;
+  heartGlintMap: THREE.CanvasTexture;
 }
+
+const COIN_PALETTE = {
+  o: "#6b4a12",
+  r: "#e0a92c",
+  f: "#ffd852",
+  h: "#ffe57a",
+  d: "#b8791a",
+  w: "#fffbe0",
+} as const;
+
+const HEART_PALETTE = {
+  o: "#5c1220",
+  b: "#ff5768",
+  h: "#ff9aa6",
+  w: "#fffbe0",
+} as const;
+
+const COIN_ROWS = [
+  ".....oooooo.....",
+  "...oorrrrrroo...",
+  "..orrrrrrrrrro..",
+  ".orhhhffffffrro.",
+  ".orhhffffffffro.",
+  "orhhffffffffffro",
+  "orhfffffffffffro",
+  "orfffffddfffffro",
+  "orfffffddfffffro",
+  "orhfffffffffffro",
+  "orhhffffffffffro",
+  ".orhhffffffffro.",
+  ".orhhhffffffrro.",
+  "..orrrrrrrrrro..",
+  "...oorrrrrroo...",
+  ".....oooooo.....",
+] as const;
+
+const HEART_ROWS = [
+  "................",
+  "...oo......oo...",
+  "..obbo....obbo..",
+  ".obbbbboobbbbbo.",
+  ".obbbbbbbbbbbbo.",
+  "ohbbbbbbbbbbbbbo",
+  "ohbbbbbbbbbbbbbo",
+  "obbbbbbbbbbbbbbo",
+  ".obbbbbbbbbbbbo.",
+  "..obbbbbbbbbbo..",
+  "...obbbbbbbbo...",
+  "....obbbbbbo....",
+  ".....obbbbo.....",
+  "......obbo......",
+  ".......oo.......",
+  "................",
+] as const;
 
 function buildSurfaceBundle(
   heightField: Float32Array,
@@ -470,6 +528,24 @@ export function buildEnvironmentTextures(): EnvironmentTextures {
     }
   }
 
+  // 11. World Pickup Sprites — Gold Coin & Healing Heart (16x16, base + glint frames).
+  // Drawn from fixed grids without RNG so the shared ENV_TEXTURES stream and every
+  // existing terrain/banner texture stay byte-identical.
+  const coinBase = drawGridSprite(COIN_ROWS, COIN_PALETTE);
+  const coinGlintC = makeCanvas(16, 16);
+  coinGlintC.ctx.drawImage(coinBase, 0, 0);
+  coinGlintC.ctx.fillStyle = COIN_PALETTE.w;
+  coinGlintC.ctx.fillRect(12, 2, 1, 1);
+  coinGlintC.ctx.fillRect(11, 3, 1, 1);
+  coinGlintC.ctx.fillRect(13, 3, 1, 1);
+
+  const heartBase = drawGridSprite(HEART_ROWS, HEART_PALETTE);
+  const heartGlintC = makeCanvas(16, 16);
+  heartGlintC.ctx.drawImage(heartBase, 0, 0);
+  heartGlintC.ctx.fillStyle = HEART_PALETTE.w;
+  heartGlintC.ctx.fillRect(2, 4, 1, 1);
+  heartGlintC.ctx.fillRect(3, 6, 1, 1);
+
   // Note: world surfaces use repeat (1, 1) with RepeatWrapping because geometry UVs are projected linearly in world units.
   return {
     grassMap: canvasToPixelTexture(grassC.canvas, {
@@ -507,5 +583,9 @@ export function buildEnvironmentTextures(): EnvironmentTextures {
     bushMap: canvasToPixelTexture(bushC.canvas),
     flameTextures,
     slashMap: canvasToPixelTexture(slashC.canvas),
+    coinMap: canvasToPixelTexture(coinBase),
+    coinGlintMap: canvasToPixelTexture(coinGlintC.canvas),
+    heartMap: canvasToPixelTexture(heartBase),
+    heartGlintMap: canvasToPixelTexture(heartGlintC.canvas),
   };
 }
