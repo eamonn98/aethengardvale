@@ -78,7 +78,7 @@ export class GameApp {
       this.heroProfile.appearance,
     );
     this.enemies = new EnemyManager(this.pipeline.scene, this.charTex.slimes);
-    this.pickups = new PickupManager(this.pipeline.scene);
+    this.pickups = new PickupManager(this.pipeline.scene, this.envTex);
     this.floatingText = new FloatingTextLayer(dmgLayer);
     this.minimap = new MinimapRenderer(mmCanvas);
 
