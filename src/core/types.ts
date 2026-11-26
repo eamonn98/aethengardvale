@@ -39,5 +39,12 @@ export interface GameEvents {
   "player:died": { slimesDefeated: number; lvl: number };
   "boss:spawned": { tier: SlimeTier };
   "boss:defeated": { tier: SlimeTier };
+  "boss:hp": {
+    active: boolean;
+    tier: SlimeTier | null;
+    name: string;
+    hp: number;
+    maxHp: number;
+  };
   "chest:opened": { goldBonus: number; atkBonus: number };
 }

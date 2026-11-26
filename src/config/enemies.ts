@@ -1,6 +1,7 @@
 import type { SlimeTier } from "../core/types.ts";
 
 export interface SlimeTierConfig {
+  displayName: string;
   hp: number;
   atk: number;
   xp: number;
@@ -13,6 +14,7 @@ export interface SlimeTierConfig {
 
 export const SLIME_TIERS: Record<SlimeTier, SlimeTierConfig> = {
   green: {
+    displayName: "Green Slime",
     hp: 20,
     atk: 5,
     xp: 10,
@@ -23,6 +25,7 @@ export const SLIME_TIERS: Record<SlimeTier, SlimeTierConfig> = {
     color: "#69e05a",
   },
   blue: {
+    displayName: "Blue Slime",
     hp: 32,
     atk: 7,
     xp: 16,
@@ -33,6 +36,7 @@ export const SLIME_TIERS: Record<SlimeTier, SlimeTierConfig> = {
     color: "#5ecbff",
   },
   red: {
+    displayName: "Red Slime",
     hp: 48,
     atk: 10,
     xp: 26,
@@ -43,6 +47,7 @@ export const SLIME_TIERS: Record<SlimeTier, SlimeTierConfig> = {
     color: "#ff694e",
   },
   king: {
+    displayName: "King Slime",
     hp: 145,
     atk: 14,
     xp: 90,

@@ -6,6 +6,7 @@ import {
 } from "../assets/environmentTextures.ts";
 import { SoundEngine } from "../audio/soundEngine.ts";
 import type { HeroProfile } from "../config/characterAppearance.ts";
+import { SLIME_TIERS } from "../config/enemies.ts";
 import { CHEST_SPOT } from "../config/worldLayout.ts";
 import { EventBus } from "../core/events.ts";
 import { InputManager } from "../core/input.ts";
@@ -18,6 +19,7 @@ import { FloatingTextLayer } from "../ui/floatingText.ts";
 import { HudController } from "../ui/hud.ts";
 import { MinimapRenderer } from "../ui/minimap.ts";
 import { buildValeWorld, type WorldInstance } from "../world/valeBuilder.ts";
+import { findActiveBoss } from "./bossHp.ts";
 import { applyExperienceGain, resolveSwordHits } from "./combat.ts";
 import { EnemyManager, type SlimeEntity } from "./enemies.ts";
 import { ParticleSystem } from "./particles.ts";
@@ -52,6 +54,7 @@ export class GameApp {
   private hitstopTimer = 0;
   private elapsed = 0;
   private rafId = 0;
+  private lastBossHpKey = "";
 
   private readonly handleResize = (): void => {
     this.pipeline.resize(window.innerWidth, window.innerHeight);
@@ -182,17 +185,20 @@ export class GameApp {
           floatingText: this.floatingText,
           cameraController: this.cameraController,
           onPlayerDamaged: () => this.emitStats(),
-          onPlayerDied: () =>
+          onPlayerDied: () => {
             this.events.emit("player:died", {
               slimesDefeated: this.player.slimesDefeated,
               lvl: this.player.lvl,
-            }),
+            });
+            this.hideBossHp();
+          },
           onKingBossSpawned: () => {
             this.events.emit("boss:spawned", { tier: "king" });
             this.events.emit("banner:show", {
               message: "Warning: King Slime Appears in the Sanctuary!",
               duration: 3.6,
             });
+            this.syncBossHp();
           },
         });
 
@@ -325,6 +331,41 @@ export class GameApp {
       },
       onDefeatSlime: (idx, s) => this.defeatSlime(idx, s),
     });
+    this.syncBossHp();
+  }
+
+  /**
+   * Publishes the live boss HP through the EventBus so the HUD can own its bar DOM.
+   * Memoised on tier/hp so repeated slashes at the same HP skip redundant DOM writes.
+   */
+  private syncBossHp(): void {
+    const boss = findActiveBoss(this.enemies.slimes);
+    const key = boss ? `${boss.tier}:${boss.hp}:${boss.maxHp}` : "none";
+    if (key === this.lastBossHpKey) return;
+    this.lastBossHpKey = key;
+    this.events.emit(
+      "boss:hp",
+      boss
+        ? {
+            active: true,
+            tier: boss.tier,
+            name: SLIME_TIERS[boss.tier].displayName,
+            hp: boss.hp,
+            maxHp: boss.maxHp,
+          }
+        : { active: false, tier: null, name: "", hp: 0, maxHp: 0 },
+    );
+  }
+
+  private hideBossHp(): void {
+    this.lastBossHpKey = "none";
+    this.events.emit("boss:hp", {
+      active: false,
+      tier: null,
+      name: "",
+      hp: 0,
+      maxHp: 0,
+    });
   }
 
   private defeatSlime(idx: number, s: SlimeEntity): void {
@@ -378,6 +419,7 @@ export class GameApp {
     }
 
     this.emitStats();
+    this.syncBossHp();
   }
 
   private updateAtmosphereAndFX(dt: number): void {
@@ -427,6 +469,7 @@ export class GameApp {
 
     this.emitStats();
     this.hud.hideOverlay();
+    this.hideBossHp();
     this.gameStarted = true;
     this.events.emit("banner:show", {
       message: "Aethelgard Vale — Cross the Bridge",
