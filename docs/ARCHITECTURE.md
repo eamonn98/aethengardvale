@@ -22,7 +22,8 @@ AethelgardVale/
 │   │   ├── prng.ts                 # Deterministic mulberry32 PRNG
 │   │   ├── types.ts                # Shared domain types & EventBus payload map
 │   │   ├── events.ts               # Typed EventBus<TEvents>
-│   │   └── input.ts                # InputManager (keyboard state + discrete action bindings)
+│   │   ├── gamepad.ts              # Pure radial deadzone, 8-way stick snap & standard button maps
+│   │   └── input.ts                # InputManager (keyboard + gamepad polling + touch action bindings)
 │   ├── config/
 │   │   ├── constants.ts            # Seeds, bounds, UV scales, camera, HD-2D shader, player & combat tuning
 │   │   ├── characterAppearance.ts  # Modular CharacterAppearance schema, presets & color ramps
@@ -37,7 +38,9 @@ AethelgardVale/
 │   │   ├── spriteData.ts           # Compact ASCII pixel grids & palettes for slimes
 │   │   └── characterSprites.ts     # Compiles hero appearance & slime sets
 │   ├── audio/
-│   │   └── soundEngine.ts          # Pure Web Audio API SFX synthesizer + 16-bit harp ambience
+│   │   ├── soundEngine.ts          # Pure Web Audio API SFX synthesizer + music transport (start/stop/pump)
+│   │   ├── musicSequencer.ts       # Drift-free lookahead scheduler, MIDI/pitch helpers, VALE_LOOP pattern
+│   │   └── instruments.ts          # Harp pluck, string pad, bass & percussion voices + shared delay/reverb bus
 │   ├── rendering/
 │   │   ├── hd2dShader.ts           # Vogel-disk Tilt-Shift DOF + split-tone grade + vignette shader
 │   │   ├── reliefMaterial.ts       # Steep parallax occlusion (POM) + cavity AO MeshStandardMaterial enhancer
@@ -80,7 +83,7 @@ flowchart TD
     GameApp --> World["world/valeBuilder.ts"]
     GameApp --> Gameplay["gameplay/*"]
     GameApp --> Assets["assets/*"]
-    GameApp --> Audio["audio/soundEngine.ts"]
+    GameApp --> Audio["audio/*"]
     GameApp --> UI["ui/*"]
     GameApp --> Core["core/*"]
 
@@ -118,6 +121,7 @@ Key rendering parameters (`src/rendering/renderPipeline.ts` & `src/rendering/hd2
 1. Compute clamped `rawDt = Math.min(clock.getDelta(), 0.05)` and advance `elapsed`.
 2. **Hitstop Gate**: If `hitstopTimer > 0`, decrement `hitstopTimer`, call `pipeline.render()`, and return early (freezing simulation while keeping the frame crisp).
 3. If `gameStarted`:
+   - `input.update()` — samples the first standard-mapping gamepad (stick deadzone, D-pad, button rising edges) before movement is read.
    - `player.update(...)` — 8-way input, dash or movement, terrain height, sprite frame, active slash hit detection (`resolveSwordHits`).
    - Proximity check for the Sanctuary Chest prompt.
    - `enemies.update(...)` — slime hop AI, knockback decay, squash-and-stretch, player contact damage, wave respawns, and King Slime boss spawn at `10` kills.
@@ -134,6 +138,7 @@ Key rendering parameters (`src/rendering/renderPipeline.ts` & `src/rendering/hd2
 - **Particle Burst Materials**: `ParticleSystem` caches `THREE.MeshBasicMaterial` instances by hex color in a `Map` and shares a single `BoxGeometry(0.14, 0.14, 0.14)` across all burst particles.
 - **Pickups**: `PickupManager` shares one `OctahedronGeometry` and two cached materials (`goldMat`, `heartMat`).
 - **Enemy Sprites**: Each `SlimeEntity` owns its own `MeshStandardMaterial` so hit-flash `emissive` pulses do not bleed across other slimes; `EnemyManager.removeSlimeAt` and `clear()` explicitly dispose geometry and material on removal.
+- **Music Session**: `SoundEngine.startMusic()` builds a single delay/reverb bus and lookahead scheduler per session; `stopMusic()` clears the tick timer before any further notes are scheduled, and `dispose()` disconnects every bus node and closes the `AudioContext`.
 - **Clean Reset**: `GameApp.resetGame()` clears pickups, burst particles, floating DOM text nodes, hitstop, shake, and respawns enemies deterministically without reloading the page.
 
 ---
