@@ -3,6 +3,21 @@ import type { WorldBounds } from "../core/types.ts";
 export const SEEDS = {
   ENV_TEXTURES: 4219,
   WORLD_VALE: 9001,
+  MUSIC_REVERB: 1337,
+} as const;
+
+export const MUSIC_CONFIG = {
+  bpm: 84,
+  stepsPerBeat: 4,
+  totalSteps: 32,
+  lookaheadSeconds: 0.1,
+  tickMs: 25,
+  maxCatchUpSteps: 8,
+  delaySeconds: 0.28,
+  delayFeedback: 0.32,
+  delayLowpassHz: 2200,
+  reverbSeconds: 2.6,
+  reverbDecay: 2.4,
 } as const;
 
 export const WORLD_BOUNDS: WorldBounds = {

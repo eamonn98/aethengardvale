@@ -1,17 +1,30 @@
-const AMBIENCE_SEQ = [
-  293.66, 369.99, 440.0, 587.33, 440.0, 369.99, 246.94, 329.63, 392.0, 493.88,
-  392.0, 329.63, 261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 220.0, 293.66,
-  369.99, 440.0, 369.99, 293.66,
-] as const;
+import { MUSIC_CONFIG } from "../config/constants.ts";
+import {
+  type MusicBus,
+  createMusicBus,
+  playBass,
+  playHarpPluck,
+  playPerc,
+  playStringPad,
+} from "./instruments.ts";
+import {
+  LookaheadScheduler,
+  VALE_LOOP,
+  channelAt,
+  secondsPerStep,
+} from "./musicSequencer.ts";
 
 /**
- * Pure Web Audio API procedural sound effects and 16-bit harp arpeggio engine.
+ * Pure Web Audio API procedural sound effects plus a lookahead-scheduled
+ * four-channel 16-bit background music loop.
  */
 export class SoundEngine {
   private ctx: AudioContext | null = null;
   private enabled = true;
-  private bgmTimer: ReturnType<typeof setInterval> | null = null;
-  private bgmStep = 0;
+  private musicBus: MusicBus | null = null;
+  private scheduler: LookaheadScheduler | null = null;
+  private musicTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly stepDuration = secondsPerStep(VALE_LOOP);
 
   isEnabled(): boolean {
     return this.enabled;
@@ -27,16 +40,15 @@ export class SoundEngine {
     if (this.ctx.state === "suspended") {
       void this.ctx.resume();
     }
-    this.startAmbience();
+    this.startMusic();
   }
 
   toggle(): boolean {
     this.enabled = !this.enabled;
     if (this.enabled) {
       this.init();
-    } else if (this.bgmTimer !== null) {
-      clearInterval(this.bgmTimer);
-      this.bgmTimer = null;
+    } else {
+      this.stopMusic();
     }
     return this.enabled;
   }
@@ -190,33 +202,74 @@ export class SoundEngine {
     osc.stop(t + 0.045);
   }
 
-  startAmbience(): void {
-    if (this.bgmTimer !== null || !this.enabled || !this.ctx) return;
-    this.bgmTimer = setInterval(() => {
-      if (!this.enabled || !this.ctx || this.ctx.state !== "running") return;
-      const t = this.ctx.currentTime;
-      const f = AMBIENCE_SEQ[this.bgmStep % AMBIENCE_SEQ.length] ?? 293.66;
-      this.bgmStep++;
-      const osc = this.ctx.createOscillator();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(f, t);
-      const lpf = this.ctx.createBiquadFilter();
-      lpf.type = "lowpass";
-      lpf.frequency.value = 1100;
-      const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0.001, t);
-      g.gain.linearRampToValueAtTime(0.032, t + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0008, t + 0.62);
-      osc.connect(lpf).connect(g).connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.65);
-    }, 360);
+  /** Starts (or resumes) the background music loop; safe to call repeatedly. */
+  startMusic(): void {
+    if (this.musicTimer !== null || !this.enabled || !this.ctx) return;
+    const ctx = this.ctx;
+    if (!this.musicBus) this.musicBus = createMusicBus(ctx, ctx.destination);
+    this.scheduler = new LookaheadScheduler(VALE_LOOP, ctx.currentTime + MUSIC_CONFIG.tickMs / 1000);
+    this.pumpMusic();
+    this.musicTimer = setInterval(() => this.pumpMusic(), MUSIC_CONFIG.tickMs);
+  }
+
+  stopMusic(): void {
+    if (this.musicTimer !== null) {
+      clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+    this.scheduler = null;
+  }
+
+  /**
+   * Lookahead tick: the timer only decides *when* to look, while
+   * `LookaheadScheduler` derives note times from `AudioContext.currentTime`,
+   * so timer jitter never shifts the musical grid.
+   */
+  private pumpMusic(): void {
+    const ctx = this.ctx;
+    const scheduler = this.scheduler;
+    if (!this.enabled || !ctx || !scheduler || !this.musicBus) return;
+    const now = ctx.currentTime;
+    if (ctx.state !== "running") {
+      scheduler.reset(now + MUSIC_CONFIG.lookaheadSeconds);
+      return;
+    }
+    // A throttled background tab wakes far behind the grid; restart cleanly
+    // instead of dumping seconds of stale notes into the present.
+    if (scheduler.nextStepTime < now - MUSIC_CONFIG.lookaheadSeconds) {
+      scheduler.reset(now + MUSIC_CONFIG.tickMs / 1000);
+    }
+    for (const due of scheduler.collect(now, MUSIC_CONFIG.lookaheadSeconds)) {
+      this.scheduleStep(due.step, due.time);
+    }
+  }
+
+  private scheduleStep(step: number, time: number): void {
+    const ctx = this.ctx;
+    const bus = this.musicBus;
+    if (!ctx || !bus) return;
+
+    const accent = step % 8 === 0 ? 1 : step % 4 === 0 ? 0.88 : 0.74;
+    const lead = channelAt(VALE_LOOP, "lead", step);
+    if (lead !== null) playHarpPluck(ctx, bus, time, lead, accent);
+
+    const chord = channelAt(VALE_LOOP, "pad", step);
+    if (chord !== null) {
+      playStringPad(ctx, bus, time, chord, this.stepDuration * 8 - 0.02, 0.9);
+    }
+
+    const bass = channelAt(VALE_LOOP, "bass", step);
+    if (bass !== null) playBass(ctx, bus, time, bass, this.stepDuration * 4, 0.95);
+
+    const hit = channelAt(VALE_LOOP, "perc", step);
+    if (hit !== null) playPerc(ctx, bus, time, hit, hit === "low" ? 1 : 0.7);
   }
 
   dispose(): void {
-    if (this.bgmTimer !== null) {
-      clearInterval(this.bgmTimer);
-      this.bgmTimer = null;
+    this.stopMusic();
+    if (this.musicBus) {
+      this.musicBus.disconnect();
+      this.musicBus = null;
     }
     if (this.ctx) {
       void this.ctx.close();

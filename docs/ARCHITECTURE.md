@@ -38,7 +38,9 @@ AethelgardVale/
 │   │   ├── spriteData.ts           # Compact ASCII pixel grids & palettes for slimes
 │   │   └── characterSprites.ts     # Compiles hero appearance & slime sets
 │   ├── audio/
-│   │   └── soundEngine.ts          # Pure Web Audio API SFX synthesizer + 16-bit harp ambience
+│   │   ├── soundEngine.ts          # Pure Web Audio API SFX synthesizer + music transport (start/stop/pump)
+│   │   ├── musicSequencer.ts       # Drift-free lookahead scheduler, MIDI/pitch helpers, VALE_LOOP pattern
+│   │   └── instruments.ts          # Harp pluck, string pad, bass & percussion voices + shared delay/reverb bus
 │   ├── rendering/
 │   │   ├── hd2dShader.ts           # Vogel-disk Tilt-Shift DOF + split-tone grade + vignette shader
 │   │   ├── reliefMaterial.ts       # Steep parallax occlusion (POM) + cavity AO MeshStandardMaterial enhancer
@@ -81,7 +83,7 @@ flowchart TD
     GameApp --> World["world/valeBuilder.ts"]
     GameApp --> Gameplay["gameplay/*"]
     GameApp --> Assets["assets/*"]
-    GameApp --> Audio["audio/soundEngine.ts"]
+    GameApp --> Audio["audio/*"]
     GameApp --> UI["ui/*"]
     GameApp --> Core["core/*"]
 
@@ -136,6 +138,7 @@ Key rendering parameters (`src/rendering/renderPipeline.ts` & `src/rendering/hd2
 - **Particle Burst Materials**: `ParticleSystem` caches `THREE.MeshBasicMaterial` instances by hex color in a `Map` and shares a single `BoxGeometry(0.14, 0.14, 0.14)` across all burst particles.
 - **Pickups**: `PickupManager` shares one `OctahedronGeometry` and two cached materials (`goldMat`, `heartMat`).
 - **Enemy Sprites**: Each `SlimeEntity` owns its own `MeshStandardMaterial` so hit-flash `emissive` pulses do not bleed across other slimes; `EnemyManager.removeSlimeAt` and `clear()` explicitly dispose geometry and material on removal.
+- **Music Session**: `SoundEngine.startMusic()` builds a single delay/reverb bus and lookahead scheduler per session; `stopMusic()` clears the tick timer before any further notes are scheduled, and `dispose()` disconnects every bus node and closes the `AudioContext`.
 - **Clean Reset**: `GameApp.resetGame()` clears pickups, burst particles, floating DOM text nodes, hitstop, shake, and respawns enemies deterministically without reloading the page.
 
 ---
