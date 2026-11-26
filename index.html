@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>Aethelgard Vale — Procedural HD-2D RPG</title>
+        <link rel="stylesheet" href="./src/styles/hud.css" />
+    </head>
+    <body>
+        <div id="game-container"></div>
+        <div id="damage-layer"></div>
+
+        <!-- SNES / HD-2D Status HUD -->
+        <div id="status-hud" class="hud-panel">
+            <div id="portrait-box">
+                <canvas id="portrait-canvas" width="24" height="24"></canvas>
+            </div>
+            <div class="stats-col">
+                <div class="name-row">
+                    <span>Alden</span>
+                    <span id="lvl-text">LV 1</span>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">HP</span>
+                    <div class="bar-track">
+                        <div id="hp-fill" class="bar-fill"></div>
+                    </div>
+                    <span id="hp-text" class="bar-num">40/40</span>
+                </div>
+                <div class="bar-wrap">
+                    <span class="bar-label">XP</span>
+                    <div class="bar-track">
+                        <div id="xp-fill" class="bar-fill"></div>
+                    </div>
+                    <span id="xp-text" class="bar-num">0/30</span>
+                </div>
+                <div class="meta-row">
+                    <span id="slime-count">SLIMES: 0</span>
+                    <span id="gold-count">GOLD: 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top-Right Toggles -->
+        <div id="top-controls" class="hud-panel">
+            <button
+                id="btn-dof"
+                class="pill-btn"
+                title="Toggle Tilt-Shift Depth of Field (T)"
+            >
+                HD-2D DOF: ON
+            </button>
+            <button
+                id="btn-audio"
+                class="pill-btn"
+                title="Toggle Procedural Audio (M)"
+            >
+                AUDIO: ON
+            </button>
+            <button id="btn-reset" class="pill-btn" title="Reset Run (R)">
+                RESET
+            </button>
+        </div>
+
+        <div id="banner-toast">Aethelgard Vale</div>
+
+        <!-- Controls Hint -->
+        <div id="controls-hint" class="hud-panel">
+            <div>
+                <span class="key-cap">WASD</span> /
+                <span class="key-cap">Arrows</span> 8-Way Move
+            </div>
+            <div>
+                <span class="key-cap">Space</span> /
+                <span class="key-cap">J</span> /
+                <span class="key-cap">Click</span> Sword Slash
+            </div>
+            <div>
+                <span class="key-cap">Shift</span> /
+                <span class="key-cap">K</span> Dodge Dash &nbsp;
+                <span class="key-cap">E</span> Open Chest
+            </div>
+        </div>
+
+        <!-- Circular Minimap -->
+        <div class="compass-n">N</div>
+        <div id="minimap-wrap">
+            <canvas id="minimap-canvas" width="120" height="120"></canvas>
+        </div>
+
+        <!-- Title / Game Over Overlay -->
+        <div id="overlay-screen">
+            <div class="title-card">
+                <div class="title-sub">
+                    100% Procedural Three.js HD-2D Prototype
+                </div>
+                <h1 class="title-main" id="overlay-title">AETHELGARD VALE</h1>
+                <p class="title-desc" id="overlay-desc">
+                    Cross the ancient stone bridge into the Sanctuary Courtyard
+                    and drive back the slime invasion.<br />
+                    Every pixel sprite, tile texture, bump map, 3D diorama prop,
+                    shader, and 16-bit sound effect is generated procedurally in
+                    code.
+                </p>
+                <button class="start-btn" id="start-btn">
+                    Begin Adventure
+                </button>
+            </div>
+        </div>
+
+        <script type="module" src="./src/main.ts"></script>
+    </body>
+</html>

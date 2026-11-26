@@ -1,0 +1,22 @@
+{
+  "name": "aethelgard-vale",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun ./index.html --host=0.0.0.0",
+    "build": "bun build ./index.html --outdir=dist --production",
+    "preview": "bun run scripts/preview.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test && bun run build"
+  },
+  "dependencies": {
+    "three": "^0.168.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/three": "^0.168.0",
+    "typescript": "^5.7.0"
+  }
+}

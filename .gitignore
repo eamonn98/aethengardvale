@@ -1,0 +1,18 @@
+# Dependencies & Bun
+node_modules/
+
+# Build & coverage outputs
+dist/
+coverage/
+*.tsbuildinfo
+
+# Logs & environment
+*.log
+.env
+.env.*
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
