@@ -49,12 +49,23 @@ export class InputManager {
   private keys = new Map<string, boolean>();
   private actions: InputActions;
   private clickTarget: HTMLElement | null;
+  private paused = false;
   private touchRoot: HTMLElement | null;
   private readonly touchDirs = new Set<SpriteDir>();
   private gamepadVector: Vec2 = { x: 0, z: 0 };
   private prevGamepadButtons: readonly boolean[] = [];
 
   private readonly handleKeyDown = (e: KeyboardEvent): void => {
+    if (this.paused) return;
+    if (
+      e.target instanceof HTMLElement &&
+      (e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.isContentEditable)
+    ) {
+      return;
+    }
+
     const code = e.code;
     this.keys.set(code, true);
     if (PREVENT_DEFAULT_KEYS.has(code)) {
@@ -82,12 +93,14 @@ export class InputManager {
   };
 
   private readonly handleMouseDown = (e: MouseEvent): void => {
+    if (this.paused) return;
     if (e.button === 0) {
       this.actions.onMouseAttack?.();
     }
   };
 
   private readonly handlePointerDown = (e: PointerEvent): void => {
+    if (this.paused) return;
     const button = this.getTouchButton(e.target);
     if (!button) return;
     e.preventDefault();
@@ -130,6 +143,16 @@ export class InputManager {
     this.touchRoot?.addEventListener("pointercancel", this.handlePointerUp);
   }
 
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    if (paused) {
+      this.keys.clear();
+      this.touchDirs.clear();
+      this.gamepadVector = { x: 0, z: 0 };
+      this.prevGamepadButtons = [];
+    }
+  }
+
   isDown(code: string): boolean {
     return this.keys.get(code) === true;
   }
@@ -158,6 +181,7 @@ export class InputManager {
   }
 
   private pollGamepad(): void {
+    if (this.paused) return;
     if (
       typeof navigator === "undefined" ||
       typeof navigator.getGamepads !== "function"
