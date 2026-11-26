@@ -110,6 +110,7 @@ export class GameApp {
         },
       },
       this.pipeline.renderer.domElement,
+      document.getElementById("touch-controls"),
     );
 
     this.events.on("stats:changed", (stats) => this.hud.updateStats(stats));
@@ -138,6 +139,7 @@ export class GameApp {
       }
 
       if (this.gameStarted) {
+        this.input.update();
         this.player.update(
           rawDt,
           this.elapsed,

@@ -83,6 +83,12 @@
                 <span class="key-cap">K</span> Dodge Dash &nbsp;
                 <span class="key-cap">E</span> Open Chest
             </div>
+            <div>
+                <span class="key-cap">Pad</span> Stick Move &middot;
+                <span class="key-cap">A</span> Slash &middot;
+                <span class="key-cap">B</span> Dash &middot;
+                <span class="key-cap">X</span> Open Chest
+            </div>
         </div>
 
         <!-- Circular Minimap -->
@@ -107,6 +113,79 @@
                 </p>
                 <button class="start-btn" id="start-btn">
                     Begin Adventure
+                </button>
+            </div>
+        </div>
+
+        <!-- Coarse-pointer virtual controls (shown via media query) -->
+        <div id="touch-controls" role="group" aria-label="Touch controls">
+            <div id="touch-dpad" class="touch-cluster">
+                <button
+                    type="button"
+                    class="touch-btn dpad-up"
+                    data-move="up"
+                    aria-label="Move up"
+                >
+                    &#9650;
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn dpad-left"
+                    data-move="left"
+                    aria-label="Move left"
+                >
+                    &#9664;
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn dpad-right"
+                    data-move="right"
+                    aria-label="Move right"
+                >
+                    &#9654;
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn dpad-down"
+                    data-move="down"
+                    aria-label="Move down"
+                >
+                    &#9660;
+                </button>
+            </div>
+            <div id="touch-actions" class="touch-cluster">
+                <button
+                    type="button"
+                    class="touch-btn action-btn"
+                    data-action="attack"
+                    aria-label="Attack"
+                >
+                    ATK
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn action-btn"
+                    data-action="dash"
+                    aria-label="Dash"
+                >
+                    DASH
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn action-btn locked"
+                    data-action="spell"
+                    aria-label="Spell (locked)"
+                    disabled
+                >
+                    SPELL
+                </button>
+                <button
+                    type="button"
+                    class="touch-btn action-btn"
+                    data-action="interact"
+                    aria-label="Interact"
+                >
+                    USE
                 </button>
             </div>
         </div>
