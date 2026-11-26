@@ -27,6 +27,7 @@
   - **Damage**: `round((atk + randInt(0..3)) * (crit ? 1.65 : 1.0))` with `22%` crit chance.
   - **Juice**: `36ms` / `55ms` hitstop freeze, directional knockback (`8.5` normal / `4.2` king), white emissive hit flash, upward hop impulse, micro camera shake, particle burst, and floating damage text.
 - **Dodge Dash** (`Shift` / `K` / `X`): `0.16s` burst at `15.5` speed, `0.72s` cooldown, `0.22s` invulnerability frames.
+- **Gamepad & Touch**: Standard-mapping pad — left stick / D-pad 8-way move through a `0.25` radial deadzone, `A` / `RB` slash, `B` / `LB` dash, `X` / `RT` open chest, `Y` / `LT` reserved for the future spell slot. Coarse-pointer devices render translucent virtual `ATK` / `DASH` / `USE` buttons with a D-pad; the `SPELL` slot stays locked until elemental spells ship.
 - **Leveling**: `xpNext` scales by `1.48x` per level; each level grants `+10 Max HP`, full HP heal, and `+3 ATK`.
 
 ---
