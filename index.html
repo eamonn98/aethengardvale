@@ -20,7 +20,7 @@
             </div>
             <div class="stats-col">
                 <div class="name-row">
-                    <span>Alden</span>
+                    <span id="hero-name">Alden</span>
                     <span id="lvl-text">LV 1</span>
                 </div>
                 <div class="bar-wrap">
@@ -46,6 +46,13 @@
 
         <!-- Top-Right Toggles -->
         <div id="top-controls" class="hud-panel">
+            <button
+                id="btn-customize"
+                class="pill-btn"
+                title="Open Character Creator"
+            >
+                HERO
+            </button>
             <button
                 id="btn-dof"
                 class="pill-btn"
@@ -105,9 +112,101 @@
                     shader, and 16-bit sound effect is generated procedurally in
                     code.
                 </p>
-                <button class="start-btn" id="start-btn">
-                    Begin Adventure
-                </button>
+                <div class="title-actions">
+                    <button class="start-btn" id="start-btn">
+                        Begin Adventure
+                    </button>
+                    <button class="secondary-btn" id="customize-btn">
+                        Customize Hero
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character Creator Modal -->
+        <div id="creator-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="creator-title">
+            <div class="creator-card">
+                <div class="creator-header">
+                    <div>
+                        <div class="creator-sub">24×32 Layered Sprite Forge</div>
+                        <h2 id="creator-title" class="creator-title">Character Creator</h2>
+                    </div>
+                    <button id="creator-close-btn" class="creator-icon-btn" type="button" aria-label="Close Character Creator">×</button>
+                </div>
+
+                <div class="creator-layout">
+                    <div class="creator-preview-col">
+                        <div class="creator-preview-stage">
+                            <canvas id="creator-preview-canvas" width="144" height="192"></canvas>
+                        </div>
+                        <div class="creator-preview-controls">
+                            <button id="creator-rot-left" class="pill-btn" type="button" title="Rotate Left">◀</button>
+                            <span id="creator-dir-label" class="creator-dir-label">FRONT</span>
+                            <button id="creator-rot-right" class="pill-btn" type="button" title="Rotate Right">▶</button>
+                        </div>
+                        <div class="creator-anim-row">
+                            <button class="pill-btn anim-btn active" type="button" data-anim="idle">Idle</button>
+                            <button class="pill-btn anim-btn" type="button" data-anim="walk">Walk</button>
+                            <button class="pill-btn anim-btn" type="button" data-anim="atk">Attack</button>
+                        </div>
+
+                        <div class="creator-section">
+                            <div class="creator-label-row">
+                                <span class="creator-label">Quick Presets</span>
+                                <button id="creator-randomize-btn" class="pill-btn" type="button">Randomize</button>
+                            </div>
+                            <div id="creator-presets" class="preset-row"></div>
+                        </div>
+                    </div>
+
+                    <div class="creator-options-col">
+                        <div class="creator-section">
+                            <label class="creator-label" for="creator-name-input">Hero Name</label>
+                            <input
+                                id="creator-name-input"
+                                type="text"
+                                maxlength="16"
+                                placeholder="Alden"
+                                autocomplete="off"
+                            />
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Skin Tone</span>
+                            <div id="creator-skin-tones" class="swatch-grid"></div>
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Hair &amp; Headgear</span>
+                            <div id="creator-hair-styles" class="option-grid"></div>
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Hair / Plume Color</span>
+                            <div id="creator-hair-colors" class="swatch-grid"></div>
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Tunic Color</span>
+                            <div id="creator-tunic-colors" class="swatch-grid"></div>
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Cloak &amp; Shoulders</span>
+                            <div id="creator-cloak-styles" class="option-grid"></div>
+                        </div>
+
+                        <div class="creator-section">
+                            <span class="creator-label">Starting Weapon</span>
+                            <div id="creator-weapon-styles" class="option-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="creator-footer">
+                    <button id="creator-cancel-btn" class="secondary-btn" type="button">Cancel</button>
+                    <button id="creator-confirm-btn" class="start-btn" type="button">Confirm Hero</button>
+                </div>
             </div>
         </div>
 

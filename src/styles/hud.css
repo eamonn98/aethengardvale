@@ -337,6 +337,276 @@ canvas {
 .start-btn:active {
     transform: translateY(1px);
 }
+.title-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.secondary-btn {
+    background: rgba(34, 28, 22, 0.92);
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 11px 22px;
+    font-family: "Georgia", serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+    transition:
+        transform 0.12s,
+        background 0.15s,
+        border-color 0.15s;
+}
+.secondary-btn:hover {
+    background: rgba(58, 46, 34, 0.95);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+}
+.secondary-btn:active {
+    transform: translateY(1px);
+}
+
+/* Character Creator Modal */
+#creator-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: radial-gradient(
+        circle at 50% 45%,
+        rgba(20, 16, 12, 0.72),
+        rgba(6, 5, 4, 0.94)
+    );
+    backdrop-filter: blur(5px);
+    z-index: 30;
+    transition: opacity 0.25s ease;
+}
+#creator-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.creator-card {
+    width: min(760px, 96vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 20px 24px;
+    background: rgba(16, 13, 11, 0.96);
+    border: 2px solid var(--gold-dim);
+    box-shadow:
+        0 0 0 1px #080605,
+        inset 0 0 0 1px rgba(230, 198, 120, 0.18),
+        0 20px 56px rgba(0, 0, 0, 0.9);
+    border-radius: 4px;
+}
+.creator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(230, 198, 120, 0.22);
+}
+.creator-sub {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2px;
+}
+.creator-title {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: #fff6dc;
+    font-weight: normal;
+}
+.creator-icon-btn {
+    background: rgba(40, 33, 27, 0.9);
+    color: #e9dcba;
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+.creator-icon-btn:hover {
+    border-color: var(--gold);
+    color: #fff6dc;
+}
+.creator-layout {
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 720px) {
+    .creator-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.creator-preview-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.creator-preview-stage {
+    height: 216px;
+    border: 2px solid var(--gold-dim);
+    border-radius: 4px;
+    background: radial-gradient(
+        circle at 50% 42%,
+        #2b3945 0%,
+        #171417 72%,
+        #0f0d0f 100%
+    );
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#creator-preview-canvas {
+    width: 144px;
+    height: 192px;
+    image-rendering: pixelated;
+}
+.creator-preview-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.creator-dir-label {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+    font-weight: bold;
+}
+.creator-anim-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+.anim-btn.active,
+.option-btn.active {
+    background: linear-gradient(180deg, #5c482b, #382a18);
+    border-color: var(--gold);
+    color: #fff6dc;
+    box-shadow: 0 0 8px rgba(230, 198, 120, 0.25);
+}
+.creator-options-col {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+.creator-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.creator-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.creator-label {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #d4c49c;
+    font-weight: bold;
+}
+#creator-name-input {
+    width: 100%;
+    padding: 8px 10px;
+    background: #1a1512;
+    color: #fff6dc;
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
+    font-family: "Georgia", serif;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+}
+#creator-name-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(230, 198, 120, 0.35);
+}
+.swatch-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.swatch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(36, 30, 25, 0.92);
+    color: #e4d7b7;
+    border: 1px solid #5c4e38;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+}
+.swatch-btn:hover {
+    border-color: var(--gold-dim);
+}
+.swatch-btn.active {
+    border-color: var(--gold);
+    background: rgba(74, 58, 38, 0.95);
+    color: #fff6dc;
+}
+.swatch-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.8);
+    flex-shrink: 0;
+}
+.option-grid,
+.preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.option-btn {
+    background: rgba(36, 30, 25, 0.92);
+    color: #e4d7b7;
+    border: 1px solid #5c4e38;
+    border-radius: 3px;
+    padding: 5px 9px;
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    transition:
+        background 0.12s,
+        border-color 0.12s;
+}
+.option-btn:hover {
+    border-color: var(--gold-dim);
+    background: rgba(54, 44, 34, 0.95);
+}
+.creator-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(230, 198, 120, 0.22);
+}
 
 /* Floating HTML damage numbers container */
 #damage-layer {

@@ -25,8 +25,19 @@ export class InputManager {
   private keys = new Map<string, boolean>();
   private actions: InputActions;
   private clickTarget: HTMLElement | null;
+  private paused = false;
 
   private readonly handleKeyDown = (e: KeyboardEvent): void => {
+    if (this.paused) return;
+    if (
+      e.target instanceof HTMLElement &&
+      (e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.isContentEditable)
+    ) {
+      return;
+    }
+
     const code = e.code;
     this.keys.set(code, true);
     if (PREVENT_DEFAULT_KEYS.has(code)) {
@@ -54,6 +65,7 @@ export class InputManager {
   };
 
   private readonly handleMouseDown = (e: MouseEvent): void => {
+    if (this.paused) return;
     if (e.button === 0) {
       this.actions.onMouseAttack?.();
     }
@@ -65,6 +77,13 @@ export class InputManager {
     window.addEventListener("keydown", this.handleKeyDown);
     window.addEventListener("keyup", this.handleKeyUp);
     this.clickTarget?.addEventListener("mousedown", this.handleMouseDown);
+  }
+
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    if (paused) {
+      this.keys.clear();
+    }
   }
 
   isDown(code: string): boolean {

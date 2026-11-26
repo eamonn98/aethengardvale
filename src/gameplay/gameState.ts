@@ -5,13 +5,15 @@ import {
   type EnvironmentTextures,
 } from "../assets/environmentTextures.ts";
 import { SoundEngine } from "../audio/soundEngine.ts";
-import { DEFAULT_ALDEN_APPEARANCE } from "../config/characterAppearance.ts";
+import type { HeroProfile } from "../config/characterAppearance.ts";
 import { CHEST_SPOT } from "../config/worldLayout.ts";
 import { EventBus } from "../core/events.ts";
 import { InputManager } from "../core/input.ts";
+import { loadHeroProfile, saveHeroProfile } from "../core/storage.ts";
 import type { GameEvents } from "../core/types.ts";
 import { CameraController } from "../rendering/cameraController.ts";
 import { RenderPipeline } from "../rendering/renderPipeline.ts";
+import { CharacterCreatorModal } from "../ui/characterCreator.ts";
 import { FloatingTextLayer } from "../ui/floatingText.ts";
 import { HudController } from "../ui/hud.ts";
 import { MinimapRenderer } from "../ui/minimap.ts";
@@ -40,9 +42,12 @@ export class GameApp {
   private readonly floatingText: FloatingTextLayer;
   private readonly minimap: MinimapRenderer;
   private readonly hud: HudController;
+  private readonly characterCreator: CharacterCreatorModal;
   private readonly input: InputManager;
 
   private readonly clock = new THREE.Clock();
+  private heroProfile: HeroProfile;
+  private creatorOpen = false;
   private gameStarted = false;
   private hitstopTimer = 0;
   private elapsed = 0;
@@ -60,15 +65,17 @@ export class GameApp {
       throw new Error("Required root game DOM containers are missing");
     }
 
+    this.heroProfile = loadHeroProfile();
     this.pipeline = new RenderPipeline(container);
     this.envTex = buildEnvironmentTextures();
-    this.charTex = buildCharacterSprites();
+    this.charTex = buildCharacterSprites(this.heroProfile.appearance);
     this.world = buildValeWorld(this.pipeline.scene, this.envTex);
     this.particles = new ParticleSystem(this.pipeline.scene);
     this.player = new PlayerController(
       this.pipeline.scene,
       this.charTex.hero,
       this.envTex.slashMap,
+      this.heroProfile.appearance,
     );
     this.enemies = new EnemyManager(this.pipeline.scene, this.charTex.slimes);
     this.pickups = new PickupManager(this.pipeline.scene);
@@ -76,6 +83,7 @@ export class GameApp {
     this.minimap = new MinimapRenderer(mmCanvas);
 
     this.hud = new HudController(this.charTex.hero.portraitCanvas, {
+      onOpenCreator: () => this.openCharacterCreator(),
       onToggleDof: () => this.toggleDof(),
       onToggleAudio: () => this.toggleAudio(),
       onReset: () => {
@@ -87,6 +95,12 @@ export class GameApp {
         this.resetGame();
       },
     });
+    this.hud.setHeroName(this.heroProfile.name);
+
+    this.characterCreator = new CharacterCreatorModal({
+      onConfirm: (profile) => this.applyHeroProfile(profile),
+      onClose: () => this.handleCreatorClosed(),
+    });
 
     this.input = new InputManager(
       {
@@ -94,7 +108,7 @@ export class GameApp {
           if (this.gameStarted) this.player.triggerAttack(this.sfx);
         },
         onMouseAttack: () => {
-          if (this.gameStarted) {
+          if (this.gameStarted && !this.creatorOpen) {
             this.sfx.init();
             this.player.triggerAttack(this.sfx);
           }
@@ -137,7 +151,7 @@ export class GameApp {
         return;
       }
 
-      if (this.gameStarted) {
+      if (this.gameStarted && !this.creatorOpen) {
         this.player.update(
           rawDt,
           this.elapsed,
@@ -208,6 +222,37 @@ export class GameApp {
       this.pipeline.render();
     };
     tick();
+  }
+
+  private openCharacterCreator(): void {
+    this.creatorOpen = true;
+    this.input.setPaused(true);
+    this.characterCreator.open(this.heroProfile);
+  }
+
+  private handleCreatorClosed(): void {
+    this.creatorOpen = false;
+    this.input.setPaused(false);
+  }
+
+  private applyHeroProfile(profile: HeroProfile): void {
+    this.heroProfile = {
+      name: profile.name,
+      appearance: { ...profile.appearance },
+    };
+    saveHeroProfile(this.heroProfile);
+    const updatedPortrait = this.player.setAppearance(
+      this.heroProfile.appearance,
+    );
+    this.hud.setPortrait(updatedPortrait);
+    this.hud.setHeroName(this.heroProfile.name);
+    this.handleCreatorClosed();
+    if (this.gameStarted) {
+      this.events.emit("banner:show", {
+        message: `${this.heroProfile.name} — Appearance Updated`,
+        duration: 2.2,
+      });
+    }
   }
 
   private emitStats(): void {
@@ -363,8 +408,9 @@ export class GameApp {
   }
 
   resetGame(): void {
-    const defaultPortrait = this.player.setAppearance(DEFAULT_ALDEN_APPEARANCE);
-    this.hud.setPortrait(defaultPortrait);
+    const profilePortrait = this.player.setAppearance(this.heroProfile.appearance);
+    this.hud.setPortrait(profilePortrait);
+    this.hud.setHeroName(this.heroProfile.name);
     this.player.reset();
     this.world.chest.opened = false;
     this.world.chest.lidPivot.rotation.x = 0;
@@ -389,6 +435,7 @@ export class GameApp {
   dispose(): void {
     cancelAnimationFrame(this.rafId);
     window.removeEventListener("resize", this.handleResize);
+    this.characterCreator.dispose();
     this.input.dispose();
     this.sfx.dispose();
     this.particles.dispose();

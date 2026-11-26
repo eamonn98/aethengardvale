@@ -5,6 +5,7 @@ export interface HudActions {
   onToggleAudio: () => void;
   onReset: () => void;
   onStart: () => void;
+  onOpenCreator: () => void;
 }
 
 function requireElement<T extends HTMLElement>(id: string): T {
@@ -20,6 +21,7 @@ function requireElement<T extends HTMLElement>(id: string): T {
  */
 export class HudController {
   private readonly portraitCanvas = requireElement<HTMLCanvasElement>("portrait-canvas");
+  private readonly heroName = requireElement<HTMLElement>("hero-name");
   private readonly lvlText = requireElement<HTMLElement>("lvl-text");
   private readonly hpText = requireElement<HTMLElement>("hp-text");
   private readonly hpFill = requireElement<HTMLElement>("hp-fill");
@@ -28,6 +30,7 @@ export class HudController {
   private readonly slimeCount = requireElement<HTMLElement>("slime-count");
   private readonly goldCount = requireElement<HTMLElement>("gold-count");
   private readonly bannerToast = requireElement<HTMLElement>("banner-toast");
+  private readonly btnCustomize = requireElement<HTMLButtonElement>("btn-customize");
   private readonly btnDof = requireElement<HTMLButtonElement>("btn-dof");
   private readonly btnAudio = requireElement<HTMLButtonElement>("btn-audio");
   private readonly btnReset = requireElement<HTMLButtonElement>("btn-reset");
@@ -35,16 +38,23 @@ export class HudController {
   private readonly overlayTitle = requireElement<HTMLElement>("overlay-title");
   private readonly overlayDesc = requireElement<HTMLElement>("overlay-desc");
   private readonly startBtn = requireElement<HTMLButtonElement>("start-btn");
+  private readonly customizeBtn = requireElement<HTMLButtonElement>("customize-btn");
 
   private toastTimer = 0;
 
   constructor(portraitSource: HTMLCanvasElement, actions: HudActions) {
     this.setPortrait(portraitSource);
 
+    this.btnCustomize.addEventListener("click", actions.onOpenCreator);
+    this.customizeBtn.addEventListener("click", actions.onOpenCreator);
     this.btnDof.addEventListener("click", actions.onToggleDof);
     this.btnAudio.addEventListener("click", actions.onToggleAudio);
     this.btnReset.addEventListener("click", actions.onReset);
     this.startBtn.addEventListener("click", actions.onStart);
+  }
+
+  setHeroName(name: string): void {
+    this.heroName.textContent = name;
   }
 
   setPortrait(portraitSource: HTMLCanvasElement): void {
